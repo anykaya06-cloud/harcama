@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Harcama Takip Uygulaması</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.category {
+    margin-bottom: 10px;
+}
+
+input {
+    padding: 6px;
+    margin: 4px 0;
+    width: 100%;
+}
+
+button {
+    padding: 6px 10px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.result {
+    font-size: 18px;
+    font-weight: bold;
+}
+.positive { color: green; }
+.negative { color: red; }
+</style>
+</head>
+
+<body>
+<h1>💰 Harcama Takip Uygulaması</h1>
+
+<div class="container">
+
+<div class="card">
+    <h3>📥 Gelir Bilgisi</h3>
+    <input type="number" id="income" placeholder="Aylık gelir (₺)">
+</div>
+
+<div class="card">
+    <h3>🛒 Market</h3>
+    <input type="number" id="market" placeholder="Market harcaması">
+    <input type="text" placeholder="Detay (Migros, Carrefour...)">
+</div>
+
+<div class="card">
+    <h3>🚍 Ulaşım</h3>
+    <input type="number" id="transport" placeholder="Ulaşım harcaması">
+</div>
+
+<div class="card">
+    <h3>💡 Fatura</h3>
+    <input type="number" id="bill" placeholder="Fatura harcaması">
+</div>
+
+<div class="card">
+    <h3>🎮 Eğlence</h3>
+    <input type="number" id="fun" placeholder="Eğlence harcaması">
+</div>
+
+<button onclick="calculate()">📊 Hesapla</button>
+
+<div class="card">
+    <p>Toplam Harcama: <span id="totalExpense">0</span> ₺</p>
+    <p>Bakiye: <span id="balance">0</span> ₺</p>
+    <p class="result" id="status"></p>
+</div>
+
+</div>
+
+<script>
+function calculate() {
+    const income = Number(document.getElementById("income").value) || 0;
+    const market = Number(document.getElementById("market").value) || 0;
+    const transport = Number(document.getElementById("transport").value) || 0;
+    const bill = Number(document.getElementById("bill").value) || 0;
+    const fun = Number(document.getElementById("fun").value) || 0;
+
+    const totalExpense = market + transport + bill + fun;
+    const balance = income - totalExpense;
+
+    document.getElementById("totalExpense").innerText = totalExpense;
+    document.getElementById("balance").innerText = balance;
+
+    const status = document.getElementById("status");
+    if (balance > 0) {
+        status.innerText = "✔️ Gelir harcamalardan fazla, para birikiyor";
+        status.className = "result positive";
+    } else if (balance === 0) {
+        status.innerText = "⚖️ Gelir ve gider dengede";
+        status.className = "result";
+    } else {
+        status.innerText = "⚠️ Harcamalar gelirden fazla, borç riski";
+        status.className = "result negative";
+    }
+}
+</script>
+
+</body>
+</html> 
