@@ -2,124 +2,251 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Harcama Takip Uygulaması</title>
+<title>Gelişmiş Harcama Takip</title>
+
 <style>
 body {
     font-family: Arial, sans-serif;
-    background: #f4f6f8;
+    background: linear-gradient(135deg, #e0eafc, #cfdef3);
     padding: 20px;
 }
 
 h1 {
     text-align: center;
+    color: #333;
 }
 
 .container {
-    max-width: 800px;
+    max-width: 950px;
     margin: auto;
 }
 
 .card {
-    background: white;
+    background: #fff;
     padding: 15px;
     margin-bottom: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .category {
-    margin-bottom: 10px;
+    border-left: 8px solid;
+}
+
+.market { border-color: #4caf50; }
+.food { border-color: #ff9800; }
+.transport { border-color: #03a9f4; }
+.bills { border-color: #9c27b0; }
+.fun { border-color: #e91e63; }
+.clothing { border-color: #795548; }
+.other { border-color: #607d8b; }
+
+.category h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 input {
-    padding: 6px;
+    padding: 8px;
     margin: 4px 0;
     width: 100%;
 }
 
 button {
-    padding: 6px 10px;
+    padding: 7px 12px;
+    margin-top: 6px;
     cursor: pointer;
-    margin-top: 5px;
+    border: none;
+    border-radius: 6px;
+    background: #3f51b5;
+    color: white;
 }
 
-.result {
+button:hover {
+    background: #303f9f;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.reset {
+    background: #f44336;
+}
+
+.reset:hover {
+    background: #d32f2f;
+}
+
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul li {
+    background: #f5f5f5;
+    margin-top: 5px;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+.summary {
     font-size: 18px;
     font-weight: bold;
 }
-.positive { color: green; }
-.negative { color: red; }
+
+.status {
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.positive {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.negative {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.neutral {
+    background: #fffde7;
+    color: #f9a825;
+}
 </style>
 </head>
 
 <body>
-<h1>💰 Harcama Takip Uygulaması</h1>
+
+<h1>💰 Gelişmiş Harcama Takip Sistemi</h1>
 
 <div class="container">
 
 <div class="card">
-    <h3>📥 Gelir Bilgisi</h3>
+    <h3>📥 Gelir</h3>
     <input type="number" id="income" placeholder="Aylık gelir (₺)">
 </div>
 
-<div class="card">
-    <h3>🛒 Market</h3>
-    <input type="number" id="market" placeholder="Market harcaması">
-    <input type="text" placeholder="Detay (Migros, Carrefour...)">
-</div>
+<div id="categories"></div>
 
-<div class="card">
-    <h3>🚍 Ulaşım</h3>
-    <input type="number" id="transport" placeholder="Ulaşım harcaması">
+<div class="actions">
+    <button onclick="calculate()">📊 Hesapla</button>
+    <button class="reset" onclick="resetAll()">♻️ Tümünü Sıfırla</button>
 </div>
-
-<div class="card">
-    <h3>💡 Fatura</h3>
-    <input type="number" id="bill" placeholder="Fatura harcaması">
-</div>
-
-<div class="card">
-    <h3>🎮 Eğlence</h3>
-    <input type="number" id="fun" placeholder="Eğlence harcaması">
-</div>
-
-<button onclick="calculate()">📊 Hesapla</button>
 
 <div class="card">
     <p>Toplam Harcama: <span id="totalExpense">0</span> ₺</p>
     <p>Bakiye: <span id="balance">0</span> ₺</p>
-    <p class="result" id="status"></p>
+    <div id="status" class="status"></div>
 </div>
 
 </div>
 
 <script>
-function calculate() {
-    const income = Number(document.getElementById("income").value) || 0;
-    const market = Number(document.getElementById("market").value) || 0;
-    const transport = Number(document.getElementById("transport").value) || 0;
-    const bill = Number(document.getElementById("bill").value) || 0;
-    const fun = Number(document.getElementById("fun").value) || 0;
+const categories = [
+    { name: "Market", class: "market" },
+    { name: "Yeme-İçme", class: "food" },
+    { name: "Ulaşım", class: "transport" },
+    { name: "Faturalar", class: "bills" },
+    { name: "Eğlence", class: "fun" },
+    { name: "Giyim", class: "clothing" },
+    { name: "Diğer", class: "other" }
+];
 
-    const totalExpense = market + transport + bill + fun;
+const state = {};
+const container = document.getElementById("categories");
+
+categories.forEach(cat => {
+    state[cat.name] = [];
+
+    const card = document.createElement("div");
+    card.className = `card category ${cat.class}`;
+
+    card.innerHTML = `
+        <h3>${cat.name} <span id="${cat.name}-total">0 ₺</span></h3>
+        <input type="text" placeholder="Detay (Migros, Netflix...)">
+        <input type="number" placeholder="Tutar (₺)">
+        <button onclick="addExpense('${cat.name}', this)">Ekle</button>
+        <ul id="${cat.name}-list"></ul>
+    `;
+
+    container.appendChild(card);
+});
+
+function addExpense(category, btn) {
+    const inputs = btn.parentElement.querySelectorAll("input");
+    const desc = inputs[0].value;
+    const amount = Number(inputs[1].value);
+
+    if (!desc || !amount) return;
+
+    state[category].push({ desc, amount });
+
+    inputs[0].value = "";
+    inputs[1].value = "";
+
+    renderCategory(category);
+}
+
+function renderCategory(category) {
+    const list = document.getElementById(`${category}-list`);
+    const totalSpan = document.getElementById(`${category}-total`);
+    list.innerHTML = "";
+
+    let total = 0;
+    state[category].forEach(item => {
+        total += item.amount;
+        const li = document.createElement("li");
+        li.textContent = `${item.desc}: ${item.amount} ₺`;
+        list.appendChild(li);
+    });
+
+    totalSpan.textContent = total + " ₺";
+}
+
+function calculate() {
+    let totalExpense = 0;
+    Object.values(state).forEach(items =>
+        items.forEach(i => totalExpense += i.amount)
+    );
+
+    const income = Number(document.getElementById("income").value) || 0;
     const balance = income - totalExpense;
 
-    document.getElementById("totalExpense").innerText = totalExpense;
-    document.getElementById("balance").innerText = balance;
+    document.getElementById("totalExpense").textContent = totalExpense;
+    document.getElementById("balance").textContent = balance;
 
     const status = document.getElementById("status");
     if (balance > 0) {
-        status.innerText = "✔️ Gelir harcamalardan fazla, para birikiyor";
-        status.className = "result positive";
+        status.textContent = "✔️ Gelir fazla, para birikiyor";
+        status.className = "status positive";
     } else if (balance === 0) {
-        status.innerText = "⚖️ Gelir ve gider dengede";
-        status.className = "result";
+        status.textContent = "⚖️ Gelir ve gider dengede";
+        status.className = "status neutral";
     } else {
-        status.innerText = "⚠️ Harcamalar gelirden fazla, borç riski";
-        status.className = "result negative";
+        status.textContent = "⚠️ Harcamalar gelirden fazla";
+        status.className = "status negative";
     }
+}
+
+function resetAll() {
+    document.getElementById("income").value = "";
+    document.getElementById("totalExpense").textContent = "0";
+    document.getElementById("balance").textContent = "0";
+    document.getElementById("status").textContent = "";
+
+    Object.keys(state).forEach(cat => {
+        state[cat] = [];
+        document.getElementById(`${cat}-list`).innerHTML = "";
+        document.getElementById(`${cat}-total`).textContent = "0 ₺";
+    });
 }
 </script>
 
 </body>
-</html> 
+</html>
